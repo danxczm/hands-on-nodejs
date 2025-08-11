@@ -7,9 +7,22 @@ import {
   getStudentById,
   updateStudent,
 } from '../services/students.js';
+import { parsePaginationParams } from '../utils/parsePaginationParams.js';
+import { parseSortParams } from '../utils/parseSortParams.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
 
 export const getStudentsController = async (req, res) => {
-  const students = await getAllStudents();
+  const { page, perPage } = parsePaginationParams(req.query);
+  const { sortBy, sortOrder } = parseSortParams(req.query);
+  const filter = parseFilterParams(req.query);
+
+  const students = await getAllStudents({
+    page,
+    perPage,
+    sortBy,
+    sortOrder,
+    filter,
+  });
 
   res.json({
     status: 200,
@@ -46,7 +59,6 @@ export const createStudentController = async (req, res) => {
 
 export const deleteStudentController = async (req, res, next) => {
   const { studentId } = req.params;
-  console.log(`deleteStudentController: `, 'REQ', req, 'PARAMS', req.params);
 
   const student = deleteStudent(studentId);
   if (!student) {
@@ -68,8 +80,6 @@ export const upsertStudentController = async (req, res, next) => {
     next(createHttpError(404, 'Student not found'));
     return;
   }
-
-  console.log(`upsertStudentControllerResult: `, result);
 
   const status = result.isNew ? 201 : 200;
 
