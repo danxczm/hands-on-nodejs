@@ -31,7 +31,7 @@ export const getStudentsController = async (req, res) => {
   });
 };
 
-export const getStudentByIdController = async (req, res, next) => {
+export const getStudentByIdController = async (req, res) => {
   const { studentId } = req.params;
   const student = await getStudentById(studentId);
 

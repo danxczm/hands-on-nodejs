@@ -16,23 +16,23 @@ import { isValidId } from '../middlewares/isValidId.js';
 
 const router = Router();
 
-router.get('/students', ctrlWrapper(getStudentsController));
+router.get('/', ctrlWrapper(getStudentsController));
 
-router.get('/students/:studentId', isValidId, ctrlWrapper(getStudentByIdController));
+router.get('/:studentId', isValidId, ctrlWrapper(getStudentByIdController));
 
-router.post('/students', ctrlWrapper(createStudentController));
+router.post('/', ctrlWrapper(createStudentController));
 
-router.delete('/students/:studentId', isValidId, ctrlWrapper(deleteStudentController));
+router.delete('/:studentId', isValidId, ctrlWrapper(deleteStudentController));
 
 router.put(
-  '/students/:studentId',
+  '/:studentId',
   isValidId,
   validateBody(createStudentSchema),
   ctrlWrapper(upsertStudentController)
 );
 
 router.patch(
-  '/students/:studentId',
+  '/:studentId',
   isValidId,
   validateBody(updateStudentSchema),
   ctrlWrapper(patchStudentController)
