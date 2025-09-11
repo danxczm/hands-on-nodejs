@@ -27,7 +27,7 @@ const usersSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
 usersSchema.methods.toJSON = function () {

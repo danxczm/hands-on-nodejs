@@ -3,11 +3,14 @@
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
+import jwt from 'jsonwebtoken';
 import { UsersCollection } from '../db/models/user.js';
-import { FIFTEEN_MINUTES, ONE_DAY } from '../constants/index.js';
+import { FIFTEEN_MINUTES, ONE_DAY, SMTP } from '../constants/index.js';
 import { SessionsCollection } from '../db/models/session.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
+import { sendEmail } from '../utils/sendMail.js';
 
-export const registerUser = async (payload) => {
+export const registerUser = async payload => {
   const user = await UsersCollection.findOne({ email: payload.email });
   if (user) throw createHttpError(409, 'Email in use');
 
@@ -19,7 +22,7 @@ export const registerUser = async (payload) => {
   });
 };
 
-export const loginUser = async (payload) => {
+export const loginUser = async payload => {
   const user = await UsersCollection.findOne({ email: payload.email });
   if (!user) {
     throw createHttpError(401, 'User not found');
@@ -30,7 +33,7 @@ export const loginUser = async (payload) => {
     throw createHttpError(401, 'Unauthorized');
   }
 
-   await SessionsCollection.deleteOne({ userId: user._id });
+  await SessionsCollection.deleteOne({ userId: user._id });
 
   const accessToken = randomBytes(30).toString('base64');
   const refreshToken = randomBytes(30).toString('base64');
@@ -44,7 +47,7 @@ export const loginUser = async (payload) => {
   });
 };
 
-export const logoutUser = async (sessionId) => {
+export const logoutUser = async sessionId => {
   await SessionsCollection.deleteOne({ _id: sessionId });
 };
 
@@ -60,7 +63,6 @@ const createSession = () => {
   };
 };
 
-
 export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
   const session = await SessionsCollection.findOne({
     _id: sessionId,
@@ -71,8 +73,7 @@ export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
     throw createHttpError(401, 'Session not found');
   }
 
-  const isSessionTokenExpired =
-    new Date() > new Date(session.refreshTokenValidUntil);
+  const isSessionTokenExpired = new Date() > new Date(session.refreshTokenValidUntil);
 
   if (isSessionTokenExpired) {
     throw createHttpError(401, 'Session token expired');
@@ -85,5 +86,30 @@ export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
   return await SessionsCollection.create({
     userId: session.userId,
     ...newSession,
+  });
+};
+
+export const requestResetToken = async email => {
+  const user = await UsersCollection.findOne({ email });
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  const resetToken = jwt.sign(
+    {
+      sub: user._id,
+      email,
+    },
+    getEnvVar('JWT_SECRET'),
+    {
+      expiresIn: '15m',
+    }
+  );
+
+  await sendEmail({
+    from: getEnvVar(SMTP.SMTP_FROM),
+    to: email,
+    subject: 'Reset your password',
+    html: `<p>Click <a href="${resetToken}">here</a> to reset your password!</p>`,
   });
 };
