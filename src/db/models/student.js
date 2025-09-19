@@ -1,4 +1,4 @@
- // src/db/models/student.js
+// src/db/models/student.js
 
 import { model, Schema } from 'mongoose';
 
@@ -28,13 +28,14 @@ const studentsSchema = new Schema(
     },
     parentId: {
       type: Schema.Types.ObjectId,
-      ref: 'users'
+      ref: 'users',
     },
+    photo: { type: String },
   },
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
 export const StudentsCollection = model('students', studentsSchema);
