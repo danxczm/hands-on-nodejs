@@ -9,6 +9,7 @@ import {
   resetPasswordSchema,
 } from '../validation/auth.js';
 import {
+  getGoogleOAuthUrlController,
   loginUserController,
   logoutUserController,
   refreshUserSessionController,
@@ -39,5 +40,7 @@ router.post(
   validateBody(resetPasswordSchema),
   ctrlWrapper(resetPasswordController)
 );
+
+router.get('/get-oauth-url', ctrlWrapper(getGoogleOAuthUrlController));
 
 export default router;
